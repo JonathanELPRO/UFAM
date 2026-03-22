@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxia de Girasoles - Diseño Original</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Caveat', cursive; }
+        canvas { display: block; }
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: rgba(255,255,255,0.5);
+            pointer-events: none; font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">Explora la galaxia (Mouse/Touch)</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+
+        const TIPO_GALAXY = "MAMA"; 
+
+        const CONFIGS = {
+            "JOHANA": {
+                mensajes: [
+                    'Para mi amor, Johana', 'Mi morenita bonita', 'Tu amabilidad es infinita', 
+                    'Nuestro pugsito es muy lindo', 'Nuestro amor es eterno', 'Nuestra casita pronto', 
+                    'Eres mi galaxia', 'Mi persona favorita', 'Amor recíproco',
+                    'Siempre juntos', 'Mi lugar seguro', 'Te amo cada día más',
+                    'Gracias por existir', 'Tu sonrisa ilumina todo', 'Eres mi sueño hecho realidad', 'Tú bigote me da envidia',
+                    'Compañera de vida', 'Un futuro a tu lado', 'Mi felicidad eres tú'
+                ],
+                extras: "none"
+            },
+            "MAMA": {
+                mensajes: [
+                    'Para mi Mamá, mi ejemplo', 'La más trabajadora', 'Amor incondicional', 
+                    'En tu cumpleaños te lo comprare charque', 'En tu cumpleaños te lo comprare mote con queso', 'Te amo mamita', 
+                    'Luz en mi vida', 'Gracias por todo el esfuerzo que haces',
+                    'Eres mi gran ejemplo', 'Siempre en mi corazón', 'Mi guía eterna', 'La mejor mamá del mundo', 'Gracias por todo mamá', 'Eres única'
+                ],
+                extras: "orchids"
+            },
+            "HERMANA": {
+                mensajes: [
+                    'Para mi Hermana guerrera', 'Persigue tus sueños', 'Santi y Mati <3', 
+                    'Bruna, Máximo y Leyla <3', 'Kiara siempre con nosotros',
+                    'Tu voz nos alegra', 'Juntos en todo', 'Hermanitosss',
+                    'Orgulloso de ti', 'La mejor cantante del mundo y del Folklore', 'Siempre estaré para ti'
+                ],
+                extras: "music"
+            }
+        };
+
+        const current = CONFIGS[TIPO_GALAXY];
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3000);
+        camera.position.set(0, 50, 450);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+
+        const starGeo = new THREE.BufferGeometry();
+        const starCoords = [];
+        for(let i=0; i<15000; i++) {
+            starCoords.push((Math.random()-0.5)*2000, (Math.random()-0.5)*2000, (Math.random()-0.5)*2000);
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.8 });
+        scene.add(new THREE.Points(starGeo, starMat));
+
+        const coreGroup = new THREE.Group();
+        
+        const coreGeo = new THREE.SphereGeometry(40, 32, 32);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        coreGroup.add(core);
+
+        const ringGeo = new THREE.TorusGeometry(60, 2, 2, 100);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        coreGroup.add(ring);
+
+        // Resplandor del anillo
+        const glowGeo = new THREE.RingGeometry(55, 75, 64);
+        const glowMat = new THREE.MeshBasicMaterial({ 
+            color: 0xffff00, 
+            transparent: true, 
+            opacity: 0.4, 
+            side: THREE.DoubleSide 
+        });
+        const glow = new THREE.Mesh(glowGeo, glowMat);
+        glow.rotation.x = Math.PI / 2;
+        coreGroup.add(glow);
+
+        scene.add(coreGroup);
+
+        function createSunflowerTexture(type = "sunflower") {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            if(type === "sunflower") {
+                // Pétalos
+                ctx.fillStyle = "#FFD700";
+                for(let i=0; i<18; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(64, 64, 15, 50, (i * 20) * Math.PI/180, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                // Centro
+                ctx.beginPath(); ctx.arc(64, 64, 20, 0, Math.PI*2);
+                ctx.fillStyle = "#3E2723"; ctx.fill();
+            } else {
+                // Orquídea simplificada
+                ctx.fillStyle = "#E91E63";
+                for(let i=0; i<5; i++) {
+                    ctx.beginPath();
+                    ctx.ellipse(64, 64, 15, 35, (i * 72) * Math.PI/180, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = "#FCE4EC";
+                ctx.beginPath(); ctx.arc(64, 64, 8, 0, Math.PI*2); ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const sunTex = createSunflowerTexture("sunflower");
+        const orchidTex = createSunflowerTexture("orchid");
+
+        const flowerCount = 600;
+        for(let i=0; i<flowerCount; i++) {
+            const mat = new THREE.SpriteMaterial({ 
+                map: (current.extras === "orchids" && Math.random() > 0.8) ? orchidTex : sunTex, 
+                transparent: true 
+            });
+            const sprite = new THREE.Sprite(mat);
+            
+            // Posición aleatoria en esfera expandida
+            const r = 150 + Math.random() * 500;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            
+            sprite.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                r * Math.sin(phi) * Math.sin(theta) * 0.4, // Un poco más plano tipo galaxia
+                r * Math.cos(phi)
+            );
+            
+            const size = 15 + Math.random() * 25;
+            sprite.scale.set(size, size, 1);
+            scene.add(sprite);
+        }
+
+        function createTextSprite(text) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 1. Definimos la fuente primero para poder medirla
+    const fontSize = 60;
+    ctx.font = `${fontSize}px Caveat`;
+    
+    // 2. Medimos exactamente cuánto espacio ocupa el texto
+    const textMetrics = ctx.measureText(text);
+    const textWidth = Math.ceil(textMetrics.width) + 40; // +40 para un margen extra
+    
+    // 3. Ajustamos el tamaño del canvas dinámicamente
+    canvas.width = textWidth;
+    canvas.height = 100; // Un alto suficiente para la fuente de 60px
+    
+    // 4. Volvemos a configurar el contexto (se resetea al cambiar width/height)
+    ctx.font = `${fontSize}px Caveat`;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = "white"; 
+    ctx.shadowBlur = 8;
+    
+    // Dibujamos en el centro del nuevo ancho
+    ctx.fillText(text, canvas.width / 2, 70); 
+
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(mat);
+    
+    // 5. Ajustamos la escala del Sprite proporcionalmente al texto
+    // Dividimos por 4 (o el factor que prefieras) para que el tamaño en 3D sea coherente
+    const scaleX = textWidth / 4;
+    const scaleY = 25; // Alto fijo para mantener la proporción de la letra
+    sprite.scale.set(scaleX, scaleY, 1);
+    
+    return sprite;
+}
+
+        current.mensajes.forEach((msg) => {
+            const textSprite = createTextSprite(msg);
+            const r = 200 + Math.random() * 350;
+            const angle = Math.random() * Math.PI * 2;
+            textSprite.position.set(
+                Math.cos(angle) * r,
+                (Math.random()-0.5) * 300,
+                Math.sin(angle) * r
+            );
+            scene.add(textSprite);
+        });
+
+        // Extras: Notas musicales para hermana
+        if(current.extras === "music") {
+            const notes = ['♪', '♫', '♬'];
+            for(let i=0; i<40; i++) {
+                const s = createTextSprite(notes[Math.floor(Math.random()*notes.length)]);
+                s.position.set((Math.random()-0.5)*800, (Math.random()-0.5)*500, (Math.random()-0.5)*800);
+                s.scale.set(30, 30, 1);
+                scene.add(s);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            ring.rotation.z += 0.01;
+            glow.rotation.z -= 0.005;
+            
+            // Suave balanceo de la cámara
+            camera.position.y += Math.sin(Date.now() * 0.001) * 0.1;
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
